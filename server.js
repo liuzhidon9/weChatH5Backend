@@ -7,71 +7,66 @@ let encodingAesKey = 'dTaWv79OeugsZKOPQ7IiuwpZXbp2FdNye3FXJUvI14D'
 
 var express = require('express')
 var app = express()
+var cors = require('cors')
 const { decrypt } = require('@wecom/crypto')
-const { default: axios } = require('axios')
+const crypto = require('crypto');
 var convert = require('xml-js');//解析xml===>json
 
 //获取xml数据
 const xmlparser = require('express-xml-bodyparser');
 app.use(xmlparser());
 app.use(express.static('./'))
+
+app.use(cors())
+function verifyUrl(req, res) {
+    let query = req.query
+    // console.log(query);
+    const { message, id } = decrypt(encodingAesKey, query.echostr);
+    res.send(message)
+}
 // respond with "hello world" when a GET request is made to the homepage
-app.get('/verifyUrl', function (req, res) {
-    // console.log(req);
-    let query = req.query
-    // console.log(query);
-    const { message, id } = decrypt(encodingAesKey, query.echostr);
-    res.send(message)
-})
+app.get('/verifyUrl', verifyUrl)
+app.get('/orderUrl', verifyUrl)
 
-app.get('/orderUrl', function (req, res) {
-    let query = req.query
-    // console.log(query);
-    const { message, id } = decrypt(encodingAesKey, query.echostr);
-    res.send(message)
-})
+const CallbackPolicy = require('./callbackPolicy')
+let callbackPolicy = new CallbackPolicy()
 
-async function getAccessToken(suite_ticket) {
-    let res = await axios.post('https://qyapi.weixin.qq.com/cgi-bin/service/get_suite_token', {
-        suite_id: suite_id,
-        suite_secret: suite_secret,
-        suite_ticket: suite_ticket
-    })
-    return res.data.suite_access_token
-}
-
-async function getPreAuthCode(accessToken) {
-    let res = await axios.get('https://qyapi.weixin.qq.com/cgi-bin/service/get_pre_auth_code', {
-        params: { suite_access_token: accessToken }
-    })
-    return res.data.pre_auth_code
-}
-
-async function setUpAuth(accessToken, preAuthCode) {
-    let res = await axios.post(`https://qyapi.weixin.qq.com/cgi-bin/service/set_session_info?suite_access_token=${accessToken}`, {
-        pre_auth_code: preAuthCode,
-        session_info: {
-            appid: [],//允许进行授权的应用id，如1、2、3， 不填或者填空数组都表示允许授权套件内所有应用（仅旧的多应用套件可传此参数，新开发者可忽略）
-            auth_type: 1//授权类型：0 正式授权， 1 测试授权。 默认值为0
-        }
-    })
-    return res.data
-}
 app.post('/orderUrl', async function (req, res) {
 
     // console.log(req);
     let xml = decrypt(encodingAesKey, req.body.xml.encrypt[0]).message
     // console.log(xml);
     let xmlJson = JSON.parse(convert.xml2json(xml, { compact: true, spaces: 2 })).xml
-    // console.log(xmlJson);
+    console.log(xmlJson);
     let callbackType = xmlJson.InfoType._cdata
-    if (callbackType === 'suite_ticket') {
-        let accessToken = await getAccessToken(xmlJson.SuiteTicket._cdata)
-        let preAuthCode = await getPreAuthCode(accessToken)
-        let setUpAuthResult = await setUpAuth(accessToken, preAuthCode)
-        console.log(setUpAuthResult);
-    }
-
+    callbackPolicy[callbackType] ? await callbackPolicy[callbackType](xmlJson) : null
     res.send("success")
 })
+
+function genSign(url, ticket) {
+    console.log('ticket', ticket, url);
+    let noncestr = 'Wm3WZYTPz0wzccnW'
+    let timestamp = parseInt(new Date().getTime() / 1000)
+    let str = `jsapi_ticket=${ticket}&noncestr=${noncestr}&timestamp=${timestamp}&url=${url}`
+    const hash = crypto.createHash('sha1');
+    hash.update(str)
+    let signature = hash.digest('hex')
+    return { corpid, signature, timestamp, noncestr }
+}
+
+app.get('/getConfigSign', async function (req, res) {
+    let url = req.query.url
+    let ticket = await callbackPolicy.getCorpTicket()
+    let result = genSign(url, ticket)
+    res.json(result)
+})
+app.get('/getAgentConfigSign', async function (req, res) {
+    let url = req.query.url
+    let ticket = await callbackPolicy.getAppTicket()
+
+    let result = genSign(url, ticket)
+    res.json(result)
+})
+
+
 app.listen(port, () => { console.log(`http://localhost:${port}`); })
