@@ -6,6 +6,7 @@
   "dependencies": {
     "@wecom/crypto": "^1.0.0",
     "axios": "^0.21.1",
+    "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-xml-bodyparser": "^0.3.0",
@@ -17,8 +18,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "build-docker":"node ./scripts/build-docker.js",
-    "deploy":"node ./scripts/deploy.js"
+    "build-docker": "node ./scripts/build-docker.js",
+    "deploy": "node ./scripts/deploy.js"
   },
   "author": "",
   "license": "ISC"

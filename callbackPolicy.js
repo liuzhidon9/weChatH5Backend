@@ -5,29 +5,8 @@ let token = 'EEXjzVty8S49AO16N37Eb'
 let encodingAesKey = 'dTaWv79OeugsZKOPQ7IiuwpZXbp2FdNye3FXJUvI14D'
 
 const { default: axios } = require('axios')
-const fs = require('fs');
-let JsonData = {
-    filePath: './data.json',
-    _readFile() {
-        let data = fs.readFileSync(this.filePath).toString()
-        let json = data ? JSON.parse(data) : {}
-        return json
-    }
-    ,
-    _updateFile(json) {
-        fs.writeFileSync(this.filePath, JSON.stringify(json))
-    },
-    set(key, value) {
-        let json = this._readFile()
-        json[key] = value
-        this._updateFile(json)
-    },
-    get(key) {
-        let json = this._readFile()
-        return json[key]
-    }
-}
-
+const JsonData = require('./jsonData')
+let jsonData = new JsonData('./data.json')
 function errCheck(handleName, errcode, errmsg) {
     if (parseInt(errcode) === 0 || !errcode) return
     console.log(handleName, errmsg, errcode);
@@ -112,8 +91,8 @@ async function getAuthInfo(suite_access_token, auth_corpid, permanent_code) {
 class CallbackPolicy {
 
     async getCorpToken() {
-        let SuiteTicket = JsonData.get('suite_ticket')
-        let permanentCode = JsonData.get(corpid)
+        let SuiteTicket = jsonData.get('suite_ticket')
+        let permanentCode = jsonData.get(corpid)
         let suiteAccessToken = await getSuiteAccessToken(SuiteTicket)
         let accessToken = await getCorpToken(corpid, permanentCode, suiteAccessToken)
         // console.log('accessToken',accessToken);
@@ -134,12 +113,12 @@ class CallbackPolicy {
 
     async suite_ticket(xmlJson) {
         let SuiteTicket = xmlJson.SuiteTicket._cdata
-        JsonData.set('suite_ticket', SuiteTicket)
+        jsonData.set('suite_ticket', SuiteTicket)
         let suiteAccessToken = await getSuiteAccessToken(SuiteTicket)
         let preAuthCode = await getPreAuthCode(suiteAccessToken)
         let setUpAuthResult = await setUpAuth(suiteAccessToken, preAuthCode)
         console.log(setUpAuthResult);
-        let permanentCode = JsonData.get(corpid)
+        let permanentCode = jsonData.get(corpid)
         let authInfo = await getAuthInfo(suiteAccessToken,corpid,permanentCode)
         console.log('authInfo',authInfo);
     }
@@ -147,11 +126,11 @@ class CallbackPolicy {
     async create_auth(xmlJson) {
         console.log('create_auth', xmlJson);
         let authCode = xmlJson.AuthCode._cdata
-        let SuiteTicket = JsonData.get('suite_ticket')
+        let SuiteTicket = jsonData.get('suite_ticket')
         let suiteAccessToken = await getSuiteAccessToken(SuiteTicket)
         let resData = await getPermanentCode(authCode, suiteAccessToken)
-        JsonData.set(resData.auth_user_info.userid, resData.permanent_code)
-        JsonData.set(resData.auth_corp_info.corpid, resData.permanent_code)
+        jsonData.set(resData.auth_user_info.userid, resData.permanent_code)
+        jsonData.set(resData.auth_corp_info.corpid, resData.permanent_code)
     }
 
 }
