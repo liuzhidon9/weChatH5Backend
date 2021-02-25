@@ -29,9 +29,9 @@ let JsonData = {
 }
 
 function errCheck(handleName, errcode, errmsg) {
-    if (parseInt(errcode) === 0||!errcode) return
-    console.log(handleName, errmsg,errcode);
-//    throw new Error(handleName+errmsg)
+    if (parseInt(errcode) === 0 || !errcode) return
+    console.log(handleName, errmsg, errcode);
+    //    throw new Error(handleName+errmsg)
 }
 async function getSuiteAccessToken(suite_ticket) {
     let res = await axios.post('https://qyapi.weixin.qq.com/cgi-bin/service/get_suite_token', {
@@ -39,7 +39,7 @@ async function getSuiteAccessToken(suite_ticket) {
         suite_secret: suite_secret,
         suite_ticket: suite_ticket
     })
-    errCheck('getSuiteAccessToken',res.data.errcode,res.data.errmsg)
+    errCheck('getSuiteAccessToken', res.data.errcode, res.data.errmsg)
     return res.data.suite_access_token
 }
 
@@ -47,7 +47,7 @@ async function getPreAuthCode(accessToken) {
     let res = await axios.get('https://qyapi.weixin.qq.com/cgi-bin/service/get_pre_auth_code', {
         params: { suite_access_token: accessToken }
     })
-    errCheck('getPreAuthCode',res.data.errcode,res.data.errmsg)
+    errCheck('getPreAuthCode', res.data.errcode, res.data.errmsg)
     return res.data.pre_auth_code
 }
 
@@ -59,7 +59,7 @@ async function setUpAuth(accessToken, preAuthCode) {
             auth_type: 1//授权类型：0 正式授权， 1 测试授权。 默认值为0
         }
     })
-    errCheck('setUpAuth',res.data.errcode,res.data.errmsg)
+    errCheck('setUpAuth', res.data.errcode, res.data.errmsg)
     return res.data
 }
 
@@ -67,7 +67,7 @@ async function getPermanentCode(authCode, suiteAccessToken) {
     let res = await axios.post(`https://qyapi.weixin.qq.com/cgi-bin/service/get_permanent_code?suite_access_token=${suiteAccessToken}`, {
         auth_code: authCode
     })
-    errCheck('getPermanentCode',res.data.errcode,res.data.errmsg)
+    errCheck('getPermanentCode', res.data.errcode, res.data.errmsg)
     return res.data
 }
 
@@ -77,7 +77,7 @@ async function getCorpToken(auth_corpid, permanent_code, suiteAccessToken) {
         auth_corpid: auth_corpid,
         permanent_code: permanent_code
     })
-    errCheck('getCorpToken',res.data.errcode,res.data.errmsg)
+    errCheck('getCorpToken', res.data.errcode, res.data.errmsg)
     return res.data.access_token
 }
 
@@ -89,15 +89,24 @@ async function getAccessToken(corpid, corpsecret) {
 // 获取企业的jsapi_ticket
 async function getCorpTicket(access_token) {
     let res = await axios.get(`https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${access_token}`)
-   
-    errCheck('getCorpTicket',res.data.errcode,res.data.errmsg)
+
+    errCheck('getCorpTicket', res.data.errcode, res.data.errmsg)
     return res.data.ticket
 }
 // 获取应用的jsapi_ticket
 async function getAppTicket(access_token) {
     let res = await axios.get(`https://qyapi.weixin.qq.com/cgi-bin/ticket/get?access_token=${access_token}&type=agent_config`)
-    errCheck('getAppTicket',res.data.errcode,res.data.errmsg)
+    errCheck('getAppTicket', res.data.errcode, res.data.errmsg)
     return res.data.ticket
+}
+
+// 获取企业授权信息
+async function getAuthInfo(suite_access_token, auth_corpid, permanent_code) {
+    let res = await axios.post(`https://qyapi.weixin.qq.com/cgi-bin/service/get_auth_info?suite_access_token=${suite_access_token}`, {
+        "auth_corpid": auth_corpid,
+        "permanent_code": permanent_code
+    })
+    return res.data
 }
 
 class CallbackPolicy {
@@ -130,6 +139,9 @@ class CallbackPolicy {
         let preAuthCode = await getPreAuthCode(suiteAccessToken)
         let setUpAuthResult = await setUpAuth(suiteAccessToken, preAuthCode)
         console.log(setUpAuthResult);
+        let permanentCode = JsonData.get(corpid)
+        let authInfo = await getAuthInfo(suiteAccessToken,corpid,permanentCode)
+        console.log('authInfo',authInfo);
     }
 
     async create_auth(xmlJson) {

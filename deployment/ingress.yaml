@@ -1,0 +1,31 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: stripprefix-wechat-h5-backend
+  namespace: ingress-traefik                      ##指定 Namespace
+spec:
+  stripPrefixRegex:
+    regex:
+      - /wechat-h5-backend
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: three-class-backend
+  namespace: ingress-traefik
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`ds.donviewcloud.net`) && PathPrefix(`/wechat-h5-backend`)
+      kind: Rule
+      services:
+        - name: wechat-h5-backend
+          namespace: three-class-backend
+          port: 3000
+      middlewares:
+        - name: allow-cors
+        - name: stripprefix-wechat-h5-backend
+  tls:
+    secretName: ds-tls

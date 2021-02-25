@@ -9,12 +9,16 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-xml-bodyparser": "^0.3.0",
+    "js-yaml": "^4.0.0",
+    "shelljs": "^0.8.4",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "supervisor server.js"
+    "start": "node server.js",
+    "build-docker":"node ./scripts/build-docker.js",
+    "deploy":"node ./scripts/deploy.js"
   },
   "author": "",
   "license": "ISC"
