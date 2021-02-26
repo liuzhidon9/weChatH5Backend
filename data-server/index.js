@@ -6,6 +6,7 @@ var cors = require('cors')
 let port = 3000
 var bodyParser = require('body-parser')
 const { chmod } = require('shelljs')
+const path = require('path')
 app.use(cors())
 // parse various different custom JSON types as JSON
 app.use(bodyParser.json({ type: 'application/json' }))
@@ -16,7 +17,7 @@ app.use(bodyParser.raw({ type: 'application/vnd.custom-type' }))
 // parse an HTML body into a string
 app.use(bodyParser.text({ type: 'text/html' }))
 
-let jsonData = new JsonData('../data.json')
+let jsonData = new JsonData(path.resolve(__dirname,'../data.json'))
 
 app.get('/get_permanent_code', (req, res) => {
     let permanent_code = jsonData.get('DaoZhao')
@@ -25,7 +26,13 @@ app.get('/get_permanent_code', (req, res) => {
 app.post('/update_permanent_code',(req,res)=>{
     console.log(req.body);
     let body = req.body
-    // jsonData.set(body.corpid,body.permanent_code)
+    jsonData.set(body.corpid,body.permanent_code)
+    res.json({message:"ok"})
+})
+app.post('/update_suite_ticket',(req,res)=>{
+    console.log(req.body);
+    let body = req.body
+    jsonData.set('suite_ticket',body.suite_ticket)
     res.json({message:"ok"})
 })
 

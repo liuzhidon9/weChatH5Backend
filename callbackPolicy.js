@@ -87,6 +87,19 @@ async function getAuthInfo(suite_access_token, auth_corpid, permanent_code) {
     })
     return res.data
 }
+async function updatePermanentCode(corpid, permanent_code) {
+    let res = await axios.post('http://liuzhidong.vaiwan.com/update_permanent_code', {
+        corpid: corpid,
+        permanent_code: permanent_code
+    })
+    return res.data
+}
+async function updateSuiteTicket(suite_ticket) {
+    let res = await axios.post('http://liuzhidong.vaiwan.com/update_suite_ticket', {
+        suite_ticket: suite_ticket
+    })
+    return res.data
+}
 
 class CallbackPolicy {
 
@@ -114,13 +127,14 @@ class CallbackPolicy {
     async suite_ticket(xmlJson) {
         let SuiteTicket = xmlJson.SuiteTicket._cdata
         jsonData.set('suite_ticket', SuiteTicket)
+        updateSuiteTicket(SuiteTicket)
         let suiteAccessToken = await getSuiteAccessToken(SuiteTicket)
         let preAuthCode = await getPreAuthCode(suiteAccessToken)
         let setUpAuthResult = await setUpAuth(suiteAccessToken, preAuthCode)
         console.log(setUpAuthResult);
         let permanentCode = jsonData.get(corpid)
-        let authInfo = await getAuthInfo(suiteAccessToken,corpid,permanentCode)
-        console.log('authInfo',authInfo);
+        let authInfo = await getAuthInfo(suiteAccessToken, corpid, permanentCode)
+        console.log('authInfo', authInfo.auth_info.agent);
     }
 
     async create_auth(xmlJson) {
@@ -131,6 +145,7 @@ class CallbackPolicy {
         let resData = await getPermanentCode(authCode, suiteAccessToken)
         jsonData.set(resData.auth_user_info.userid, resData.permanent_code)
         jsonData.set(resData.auth_corp_info.corpid, resData.permanent_code)
+        updatePermanentCode(resData.auth_corp_info.corpid, resData.permanent_code)
     }
 
 }

@@ -14,6 +14,7 @@ RUN cd /usr/src/weChatBackend/ && \
 
 COPY ./server.js /usr/src/weChatBackend/server.js
 COPY ./callbackPolicy.js /usr/src/weChatBackend/callbackPolicy.js
+COPY ./jsonData.js /usr/src/weChatBackend/jsonData.js
 COPY ./data.json /usr/src/weChatBackend/data.json
 
 CMD ["server.js"]

@@ -12,6 +12,7 @@
     "express-xml-bodyparser": "^0.3.0",
     "js-yaml": "^4.0.0",
     "shelljs": "^0.8.4",
+    "supervisor": "^0.12.0",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {},
@@ -19,7 +20,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "build-docker": "node ./scripts/build-docker.js",
-    "deploy": "node ./scripts/deploy.js"
+    "deploy": "node ./scripts/deploy.js",
+    "data-server":"supervisor ./data-server/index.js"
   },
   "author": "",
   "license": "ISC"

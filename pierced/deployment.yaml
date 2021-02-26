@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: wechat-h5-backend
-          image: uhub.service.ucloud.cn/iclass/donviewclass-wechat-h5-backend:210225_TS_94a04f6
+          image: uhub.service.ucloud.cn/iclass/donviewclass-wechat-h5-backend:210226_TS_c9e5382
           resources:
             limits:
               memory: 128Mi
